@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-09-18T22:34:05.876Z",
+  "version": "27.0",
+  "platform": "win32",
+  "node": "v20.7.0",
+  "results": {
+    "total": 28,
+    "passed": 27,
+    "failed": 1,
+    "passRate": 96.4,
+    "duration": 7424
+  },
+  "errors": [
+    "Server cold start under 3000ms (actual: 5291ms)"
+  ],
+  "config": {
+    "server": {
+      "port": 3000,
+      "host": "localhost",
+      "timeout": 30000,
+      "startupDelay": 5000
+    },
+    "auth": {
+      "tenantId": "18c250cf-2ef7-4eeb-b6fb-94660f7867e0",
+      "clientId": "8b84dc3b-a9ff-43ed-9d35-571f757e9c19",
+      "timeout": 120000,
+      "scopes": {
+        "graph": [
+          "User.Read"
+        ],
+        "usdm": [
+          "api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation"
+        ],
+        "powerbi": [
+          "https://analysis.windows.net/powerbi/api/.default"
+        ]
+      }
+    },
+    "powerbi": {
+      "workspaceId": "927b94af-e7ef-4b5a-8b8d-02b0c5450b75",
+      "datasetId": "ea5298a1-13f0-4629-91ab-14f98163532e",
+      "expectedRowCount": 3238644,
+      "testQueries": {
+        "rowCount": "EVALUATE ROW(\"RowCount\", COUNTROWS(labor))",
+        "tables": "EVALUATE ROW(\"TableCount\", COUNTROWS(INFO.TABLES()))",
+        "samplePerson": "EVALUATE\n        TOPN(1,\n          CALCULATETABLE(\n            labor,\n            RELATED(DIM_Team_Member[Team Member Name]) = \"Hussam Kazi\"\n          )\n        )"
+      }
+    },
+    "performance": {
+      "coldStart": 3000,
+      "healthCheck": 500,
+      "authentication": 10000,
+      "daxQuery": 5000,
+      "personLookup": 1000
+    }
+  }
+}
