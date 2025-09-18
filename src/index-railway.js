@@ -12,7 +12,9 @@ import { config } from 'dotenv';
 config();
 
 const app = express();
+// Railway provides PORT dynamically
 const PORT = process.env.PORT || 3000;
+console.log(`Railway PORT environment variable: ${process.env.PORT}`);
 
 // Middleware
 app.use(cors());
