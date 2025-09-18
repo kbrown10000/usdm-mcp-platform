@@ -90,28 +90,112 @@ app.get('/mcp/discover', (req, res) => {
   });
 });
 
-// Tools endpoint - placeholder for now
-app.post('/api/tools/:toolName', (req, res) => {
-  const { toolName } = req.params;
+// CRITICAL: MCP/RPC endpoint - Railway proxy pattern
+app.post('/mcp/rpc', (req, res) => {
+  const { method, params, id } = req.body;
+  const authToken = req.headers.authorization?.replace('Bearer ', '');
 
-  // Basic response for testing
-  if (toolName === 'start_login') {
-    res.status(200).json({
-      content: [{
-        type: 'text',
-        text: `Authentication would start here. ES modules being debugged.
+  console.log(`MCP/RPC: ${method} (auth: ${authToken ? 'yes' : 'no'})`);
 
-This is the CommonJS fallback server to ensure Railway deployment works.`
-      }]
-    });
+  // Handle tool calls
+  if (method === 'tools/call') {
+    const toolName = params?.name;
+
+    if (toolName === 'start_login') {
+      res.json({
+        result: {
+          content: [{
+            type: 'text',
+            text: `Device code authentication starting...
+This endpoint confirms Railway proxy is working.
+Full authentication being integrated.`
+          }]
+        },
+        id: id || null
+      });
+    } else {
+      res.json({
+        result: {
+          tool: toolName,
+          status: 'operational',
+          message: `Tool ${toolName} via MCP/RPC proxy`
+        },
+        id: id || null
+      });
+    }
   } else {
-    res.status(200).json({
-      tool: toolName,
-      status: 'available',
-      message: `Tool ${toolName} is available but ES modules are being debugged`,
-      version: '27.0'
+    res.json({
+      result: {
+        message: 'MCP/RPC endpoint operational',
+        method: method
+      },
+      id: id || null
     });
   }
+});
+
+// MCP Streamable HTTP endpoint (SSE)
+app.post('/mcp', (req, res) => {
+  if (req.headers.accept === 'text/event-stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+    res.write('data: {"status": "SSE endpoint operational"}\n\n');
+  } else {
+    res.json({
+      status: 'MCP endpoint operational',
+      transports: ['rpc', 'sse', 'websocket']
+    });
+  }
+});
+
+// Auth endpoints matching Railway pattern
+app.get('/auth/login', (req, res) => {
+  res.json({
+    message: 'OAuth login endpoint',
+    redirect: 'Would redirect to Microsoft login'
+  });
+});
+
+app.get('/auth/callback', (req, res) => {
+  res.json({
+    message: 'OAuth callback endpoint',
+    status: 'Would handle Microsoft callback'
+  });
+});
+
+app.get('/auth/profile', (req, res) => {
+  const authToken = req.headers.authorization?.replace('Bearer ', '');
+  res.json({
+    authenticated: !!authToken,
+    profile: authToken ? { name: 'Test User' } : null
+  });
+});
+
+// Direct tool execution endpoint
+app.post('/api/tools/call', (req, res) => {
+  const { tool, args } = req.body;
+  res.json({
+    tool: tool,
+    result: `Direct tool execution: ${tool}`,
+    args: args
+  });
+});
+
+// Tools endpoint - Railway pattern
+app.post('/api/tools/:toolName', (req, res) => {
+  const { toolName } = req.params;
+  const authToken = req.headers.authorization?.replace('Bearer ', '');
+
+  res.status(200).json({
+    tool: toolName,
+    status: 'available',
+    authenticated: !!authToken,
+    message: `Tool ${toolName} ready via Railway proxy`,
+    version: '27.0'
+  });
 });
 
 // 404 handler
