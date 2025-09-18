@@ -224,7 +224,12 @@ app.use((err, req, res, next) => {
 const httpServer = http.createServer(app);
 
 // CRITICAL: Ensure server starts listening immediately
-httpServer.listen(PORT, HOST, () => {
+console.log('[STARTUP] About to start listening...');
+httpServer.listen(PORT, HOST, (err) => {
+  if (err) {
+    console.error('[STARTUP ERROR]', err);
+    process.exit(1);
+  }
   console.log(`[SUCCESS] Server listening on ${HOST}:${PORT}`);
   console.log(`[SUCCESS] Server.listening = ${httpServer.listening}`);
   const address = httpServer.address();
@@ -245,6 +250,11 @@ httpServer.listen(PORT, HOST, () => {
   console.log('Status: CommonJS fallback mode');
   console.log('Ready to receive requests...');
   console.log('==========================================');
+
+  // Send ready signal
+  if (process.send) {
+    process.send('ready');
+  }
 });
 
 // Handle server errors
