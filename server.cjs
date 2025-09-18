@@ -9,19 +9,21 @@ const cors = require('cors');
 const http = require('http');
 require('dotenv').config();
 
-// Parse PORT as integer - Railway provides as string
-const PORT = parseInt(process.env.PORT || '8080', 10);
+// Railway provides PORT env var (works as string or number)
+const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
 console.log('========================================');
 console.log('V27.0 Production Server Starting');
 console.log('========================================');
-console.log(`Environment: ${process.env.RAILWAY_ENVIRONMENT || 'development'}`);
-console.log(`Railway Static URL: ${process.env.RAILWAY_STATIC_URL || 'not set'}`);
-console.log(`Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'not set'}`);
-console.log(`PORT (raw): "${process.env.PORT}"`);
-console.log(`PORT (parsed): ${PORT}`);
-console.log(`HOST: ${HOST}`);
+console.log(`Environment: ${process.env.NODE_ENV || process.env.RAILWAY_ENVIRONMENT || 'development'}`);
+console.log(`Node Version: ${process.version}`);
+console.log(`Platform: ${process.platform}`);
+console.log(`PID: ${process.pid}`);
+console.log(`PORT from env: ${process.env.PORT || 'not set (using default 8080)'}`);
+console.log(`Binding to: ${HOST}:${PORT}`);
+console.log(`Railway Project ID: ${process.env.RAILWAY_PROJECT_ID || 'not set'}`);
+console.log(`Railway Service: ${process.env.RAILWAY_SERVICE_NAME || 'not set'}`);
 
 // Create Express app
 const app = express();
@@ -221,24 +223,28 @@ app.use((err, req, res, next) => {
 // Create HTTP server
 const httpServer = http.createServer(app);
 
-// Start server
+// CRITICAL: Ensure server starts listening immediately
 httpServer.listen(PORT, HOST, () => {
-  console.log(`
-==========================================
-V27.0 Production Server Started
-==========================================
-Local: http://${HOST}:${PORT}
-Environment: ${process.env.RAILWAY_ENVIRONMENT || 'development'}
-
-Endpoints:
-  Health: http://${HOST}:${PORT}/health
-  Discovery: http://${HOST}:${PORT}/mcp/discover
-  Tools: POST http://${HOST}:${PORT}/api/tools/:toolName
-
-Status: CommonJS fallback mode (ES modules being debugged)
-Ready to receive requests...
-==========================================
-  `);
+  console.log(`[SUCCESS] Server listening on ${HOST}:${PORT}`);
+  console.log(`[SUCCESS] Server.listening = ${httpServer.listening}`);
+  const address = httpServer.address();
+  console.log(`[SUCCESS] Actual address: ${JSON.stringify(address)}`);
+  console.log('==========================================');
+  console.log('V27.0 Production Server Started');
+  console.log('==========================================');
+  console.log(`Local: http://${HOST}:${PORT}`);
+  console.log(`Environment: ${process.env.RAILWAY_ENVIRONMENT || 'development'}`);
+  console.log('');
+  console.log('Endpoints:');
+  console.log(`  GET  /health      - Health check`);
+  console.log(`  GET  /             - Root endpoint`);
+  console.log(`  GET  /mcp/discover - MCP Discovery`);
+  console.log(`  POST /mcp/rpc      - MCP/RPC proxy`);
+  console.log(`  POST /api/tools/*  - Tool endpoints`);
+  console.log('');
+  console.log('Status: CommonJS fallback mode');
+  console.log('Ready to receive requests...');
+  console.log('==========================================');
 });
 
 // Handle server errors
@@ -252,9 +258,33 @@ httpServer.on('error', (error) => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  console.log('[SHUTDOWN] SIGTERM received, closing server gracefully...');
   httpServer.close(() => {
-    console.log('Server closed');
+    console.log('[SHUTDOWN] Server closed');
     process.exit(0);
   });
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.error('[SHUTDOWN] Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+});
+
+process.on('SIGINT', () => {
+  console.log('[SHUTDOWN] SIGINT received, closing server gracefully...');
+  httpServer.close(() => {
+    console.log('[SHUTDOWN] Server closed');
+    process.exit(0);
+  });
+});
+
+// Uncaught exception handler
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION]', err);
+  // Don't exit, try to recover
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[UNHANDLED REJECTION] at:', promise, 'reason:', reason);
+  // Don't exit, try to recover
 });
