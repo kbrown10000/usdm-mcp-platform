@@ -1,0 +1,48 @@
+name: Production Health Check
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check Railway Deployment Health
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" https://usdm-mcp-platform-production.up.railway.app/health)
+
+        if [ "$response" = "200" ]; then
+          echo "✅ Health check passed - Server is running"
+          exit 0
+        else
+          echo "❌ Health check failed - HTTP $response"
+          exit 1
+        fi
+
+    - name: Check MCP Discovery Endpoint
+      if: success()
+      run: |
+        response=$(curl -s https://usdm-mcp-platform-production.up.railway.app/mcp/discover | jq -r .status)
+
+        if [ "$response" = "operational" ]; then
+          echo "✅ MCP Discovery endpoint is operational"
+        else
+          echo "⚠️ MCP Discovery endpoint returned: $response"
+        fi
+
+    - name: Create Issue on Failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Production Health Check Failed',
+            body: 'The production health check failed at ' + new Date().toISOString() + '\n\nPlease check the Railway deployment.',
+            labels: ['bug', 'production']
+          })
