@@ -2,7 +2,7 @@
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node server.cjs"
+startCommand = "node debug-server.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
