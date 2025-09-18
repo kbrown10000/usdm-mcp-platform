@@ -1,10 +1,14 @@
-# Railway Dockerfile - Ultra simple
+# Railway Dockerfile - Production
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Just copy the debug server
-COPY debug-server.js ./
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Start debug server directly
-CMD ["node", "debug-server.js"]
+# Copy all application files
+COPY . .
+
+# Start the production server
+CMD ["node", "server.cjs"]
