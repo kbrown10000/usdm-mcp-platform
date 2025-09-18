@@ -9,7 +9,7 @@ const cors = require('cors');
 const http = require('http');
 require('dotenv').config();
 
-// Railway provides PORT env var (works as string or number)
+// Railway provides PORT env var - default to 8080 for Railway
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
