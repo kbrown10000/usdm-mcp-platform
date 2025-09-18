@@ -17,7 +17,10 @@ console.log('========================================');
 console.log('V27.0 Production Server Starting');
 console.log('========================================');
 console.log(`Environment: ${process.env.RAILWAY_ENVIRONMENT || 'development'}`);
-console.log(`PORT: ${PORT}`);
+console.log(`Railway Static URL: ${process.env.RAILWAY_STATIC_URL || 'not set'}`);
+console.log(`Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'not set'}`);
+console.log(`PORT (raw): "${process.env.PORT}"`);
+console.log(`PORT (parsed): ${PORT}`);
 console.log(`HOST: ${HOST}`);
 
 // Create Express app
