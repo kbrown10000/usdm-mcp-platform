@@ -17,6 +17,7 @@
     "start": "node src/index-railway.js",
     "start:http": "node src/index-railway.js",
     "start:railway": "node src/index-railway.js",
+    "start:test": "node test-server.js",
     "validate:schema": "tsx scripts/validation/validate-schema.ts",
     "create:domain": "tsx scripts/migration/create-domain.ts",
     "package:mcpb": "tsx scripts/deployment/package-mcpb.ts",

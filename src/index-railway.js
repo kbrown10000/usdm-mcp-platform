@@ -84,11 +84,18 @@ app.use((err, req, res, next) => {
 });
 
 // Start server - CRITICAL: Bind to 0.0.0.0 for Railway
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 V27.0 Railway Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔍 Discovery: http://localhost:${PORT}/mcp/discover`);
+  console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
+  console.log(`🔍 Discovery: http://0.0.0.0:${PORT}/mcp/discover`);
   console.log(`✅ Environment: ${process.env.RAILWAY_ENVIRONMENT || 'development'}`);
+  console.log(`🌐 Server is listening on 0.0.0.0:${PORT}`);
+});
+
+// Add server error handling
+server.on('error', (error) => {
+  console.error('Server error:', error);
+  process.exit(1);
 });
 
 // Graceful shutdown
