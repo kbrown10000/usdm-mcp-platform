@@ -13,15 +13,8 @@ RUN npm ci --only=production || npm install --only=production
 # Copy all application files
 COPY . .
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Change ownership of app directory
-RUN chown -R nodejs:nodejs /app
-
-# Switch to non-root user
-USER nodejs
+# Skip creating non-root user for now to debug Railway
+# Railway might have issues with non-root users
 
 # Expose port (Railway will override this)
 EXPOSE 8080
