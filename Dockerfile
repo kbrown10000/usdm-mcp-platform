@@ -13,15 +13,12 @@ RUN npm ci --only=production || npm install --only=production
 # Copy all application files
 COPY . .
 
-# Skip creating non-root user for now to debug Railway
-# Railway might have issues with non-root users
-
 # Expose port (Railway will override this)
 EXPOSE 8080
 
-# Health check
+# Dynamic healthcheck that honors $PORT (falls back to 8080 locally)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+  CMD node -e "const p=process.env.PORT||8080; require('http').get(\`http://127.0.0.1:\${p}/health\`, r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 # Start the server
 CMD ["node", "server.cjs"]
