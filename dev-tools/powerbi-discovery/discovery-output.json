@@ -1,0 +1,127 @@
+{
+  "timestamp": "2025-09-17T17:23:59.353Z",
+  "workspace": "927b94af-e7ef-4b5a-8b8d-02b0c5450b75",
+  "dataset": "ea5298a1-13f0-4629-91ab-14f98163532e",
+  "tables": {},
+  "measures": [],
+  "sampleData": {
+    "labor": {
+      "labor[timecardheaderid]": "a6q1W000000RsV5QAK",
+      "labor[date]": "2020-01-22T00:00:00",
+      "labor[week_end_date]": "2020-01-25T00:00:00",
+      "labor[hours]": 8,
+      "labor[is_billable]": true,
+      "labor[bill_rate]": 98,
+      "labor[resourceid]": "0034000001hBNIOAA4",
+      "labor[resource]": "Ilgiz Yamilov",
+      "labor[projectid]": "a6O1W0000000voqUAA",
+      "labor[milestoneid]": "a6F1W0000009ffhUAA",
+      "labor[milestone_name]": "Validation Support - Ilgiz Yamilov",
+      "labor[accountid]": "00130000005dohzAAA",
+      "labor[regionid]": "a6a400000008OItAAM",
+      "labor[practiceid]": "a6N400000004C9hEAE",
+      "labor[project_type]": "LTE",
+      "labor[is_project_billable]": true,
+      "labor[is_invoiced]": true,
+      "labor[profit_type]": "Timecard",
+      "labor[cost]": 514.64,
+      "labor[personal_margin]": 269.36,
+      "labor[personal_revenue]": 784,
+      "labor[timecard_notes]": "GxP Compliance Consulting",
+      "labor[productid]": "01t40000003xIl5AAE"
+    },
+    "people": [
+      {
+        "[PersonName]": "Subramaniam Viswanathan",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Lorrie Wallace",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Catherine Cohen",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Louis Park",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Anthony Iorio",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Christopher Merriam-Leith",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Simul Mehta",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Mohamed Mestari",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "David Kershaw",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      },
+      {
+        "[PersonName]": "Lex Lim",
+        "[Department]": "4) Product, Solution, Delivery Team",
+        "[IsActive]": false
+      }
+    ]
+  },
+  "testResults": {
+    "personSearch": {
+      "found": true,
+      "count": 1,
+      "example": {
+        "DIM_Team_Member[TeamBuilderId]": "aIo1W0000004CC7SAM",
+        "DIM_Team_Member[Is Resource Active]": true,
+        "DIM_Team_Member[Is Active]": true,
+        "DIM_Team_Member[Is RoundTable]": true,
+        "DIM_Team_Member[Email]": "hkazi@usdm.com",
+        "DIM_Team_Member[CompanyId]": "a4C400000004CxdEAE",
+        "DIM_Team_Member[Role Function]": "Head of Delivery",
+        "DIM_Team_Member[Region Team Builder]": null,
+        "DIM_Team_Member[ReportsToUserId]": "00530000000ez9YAAQ",
+        "DIM_Team_Member[ManagerContactId]": "003Vo000008cneDIAQ",
+        "DIM_Team_Member[TeamLeaderContactId]": "0034000001XgtQ1AAJ",
+        "DIM_Team_Member[Parent Department]": "4) Product, Solution, Delivery Team",
+        "DIM_Team_Member[Child Department]": "Build, Maintain and Deliver",
+        "DIM_Team_Member[Department Role Function]": "Billable- Compliance",
+        "DIM_Team_Member[Delivery Unit]": "Project/Program Management",
+        "DIM_Team_Member[Billable Target Hours]": 20,
+        "DIM_Team_Member[Sales Support Quota]": null,
+        "DIM_Team_Member[Primary Division]": "Regulatory Compliance",
+        "DIM_Team_Member[Top Level Revenue Team]": "Consulting",
+        "DIM_Team_Member[Primary_CBAId]": "aG41W0000008OIzSAM",
+        "DIM_Team_Member[Billable Status]": "Half Billable 50%",
+        "DIM_Team_Member[Team_Member_ContactID]": "0034000001XgtQ1AAJ",
+        "DIM_Team_Member[UserId]": "00540000002mMMbAAM",
+        "DIM_Team_Member[Team Member Name]": "Hussam Kazi",
+        "DIM_Team_Member[BUID]": "aCQ1W0000008PLBWA2",
+        "DIM_Team_Member[Contract Type]": "W2 Employment Salary",
+        "DIM_Team_Member[RegionId]": "a6a400000008OItAAM",
+        "DIM_Team_Member[Manager Name]": "Mark Ohrvall",
+        "DIM_Team_Member[Team Leader Name]": "Hussam Kazi",
+        "DIM_Team_Member[Primary CBA For Unallocated Time]": "Non-Tech General Validation (GAMP/CSA) CBA",
+        "DIM_Team_Member[Reports To Name]": "Kevin Brown",
+        "DIM_Team_Member[Is Resource]": true,
+        "DIM_Team_Member[Current_Recruiter_Name]": "Emanuel Salinas"
+      }
+    }
+  }
+}
