@@ -7,9 +7,17 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
-require('dotenv').config();
 
-// Railway provides PORT env var - default to 8080 for Railway
+// Only load .env in development, not production
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+// Debug: Check where PORT is coming from
+const hasPORT = Object.prototype.hasOwnProperty.call(process.env, 'PORT');
+console.log('[PORT CHECK]', { value: process.env.PORT, hasPORT });
+
+// Railway provides PORT env var - default to 8080 for local dev
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
