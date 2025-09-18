@@ -1,8 +1,9 @@
 // Ultra-simple server for Railway - CommonJS
 const http = require('http');
 
-const PORT = process.env.PORT || 3000;
-const HOSTNAME = '0.0.0.0';
+// CRITICAL: Parse PORT as integer - Railway provides it as a string
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = '0.0.0.0';
 
 console.log('Starting simple server...');
 console.log('PORT from environment:', process.env.PORT);
@@ -51,10 +52,11 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, HOSTNAME, () => {
-  console.log(`✅ Simple server listening on ${HOSTNAME}:${PORT}`);
-  console.log(`✅ Health check ready at http://${HOSTNAME}:${PORT}/health`);
+server.listen(PORT, HOST, () => {
+  console.log(`✅ Simple server listening on ${HOST}:${PORT}`);
+  console.log(`✅ Health check ready at http://${HOST}:${PORT}/health`);
   console.log(`✅ Railway environment: ${process.env.RAILWAY_ENVIRONMENT || 'not set'}`);
+  console.log(`✅ Node version: ${process.version}`);
 });
 
 server.on('error', (err) => {
