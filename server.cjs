@@ -38,16 +38,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
+// --- HEALTH & READINESS ---
+let isReady = false;
+
+// Trivial health: always 200 once ready, 503 during warmup
 app.get('/health', (req, res) => {
+  if (!isReady) return res.status(503).json({ status: 'starting' });
   res.status(200).json({
-    status: 'healthy',
+    status: 'ok',
     version: '27.0',
-    timestamp: new Date().toISOString(),
-    port: PORT,
-    environment: process.env.RAILWAY_ENVIRONMENT || 'development',
-    node: process.version,
-    platform: 'CommonJS fallback'
+    ts: Date.now(),
+    port: PORT
   });
 });
 
@@ -250,6 +251,12 @@ httpServer.listen(PORT, HOST, (err) => {
   console.log('Status: CommonJS fallback mode');
   console.log('Ready to receive requests...');
   console.log('==========================================');
+
+  // Micro-delay so frameworks/middleware settle before health is green
+  setTimeout(() => {
+    isReady = true;
+    console.log('[READY] Health endpoint set to ready');
+  }, 300);
 
   // Send ready signal
   if (process.send) {
