@@ -8,10 +8,10 @@
   },
   "server": {
     "type": "node",
-    "entry_point": "server/railway-proxy-standalone.mjs",
+    "entry_point": "server/simple-railway-proxy.mjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/server/railway-proxy-standalone.mjs"],
+      "args": ["${__dirname}/server/simple-railway-proxy.mjs"],
       "env": {
         "AZURE_TENANT_ID": "18c250cf-2ef7-4eeb-b6fb-94660f7867e0",
         "AZURE_CLIENT_ID": "8b84dc3b-a9ff-43ed-9d35-571f757e9c19",

@@ -525,9 +525,29 @@ You can now use all labor analytics tools.`
           'Authorization': cached.powerbi.token ? `Bearer ${cached.powerbi.token}` : '',
           'X-Graph-Token': cached.graph.token || '',
           'X-USDM-Token': cached.usdmApi.token || '',
+          'X-PowerBI-Token': cached.powerbi.token || '',
           'Content-Type': 'application/json'
         }
       });
+
+      // Handle double-encoded responses from Railway
+      if (response.data.content && Array.isArray(response.data.content)) {
+        const firstContent = response.data.content[0];
+        if (firstContent?.type === 'text' && typeof firstContent.text === 'string') {
+          if (firstContent.text.startsWith('{') && firstContent.text.includes('"content"')) {
+            try {
+              const decoded = JSON.parse(firstContent.text);
+              if (decoded.content) {
+                return decoded;
+              }
+            } catch (e) {
+              // Not JSON, return as-is
+            }
+          }
+          return response.data;
+        }
+        return response.data;
+      }
 
       // Handle MCP/RPC response format
       if (response.data.result?.content) {
@@ -574,9 +594,10 @@ You can now use all labor analytics tools.`
       }
     }, {
       headers: {
-        'Authorization': `Bearer ${cached.powerbi.token}`,
-        'X-Graph-Token': cached.graph.token,
-        'X-USDM-Token': cached.usdmApi.token,
+        'Authorization': cached.powerbi.token ? `Bearer ${cached.powerbi.token}` : '',
+        'X-Graph-Token': cached.graph.token || '',
+        'X-USDM-Token': cached.usdmApi.token || '',
+        'X-PowerBI-Token': cached.powerbi.token || '',  // Also send as explicit header
         'Content-Type': 'application/json'
       },
       timeout: 60000  // 60 second timeout for data operations
@@ -591,6 +612,31 @@ You can now use all labor analytics tools.`
         }],
         isError: true
       };
+    }
+
+    // CRITICAL FIX: Handle double-encoded responses from Railway
+    // Railway is returning JSON strings inside content[0].text instead of proper MCP format
+    if (response.data.content && Array.isArray(response.data.content)) {
+      const firstContent = response.data.content[0];
+      if (firstContent?.type === 'text' && typeof firstContent.text === 'string') {
+        // Check if the text is actually JSON-encoded MCP response
+        if (firstContent.text.startsWith('{') && firstContent.text.includes('"content"')) {
+          try {
+            const decoded = JSON.parse(firstContent.text);
+            if (decoded.content) {
+              // This is the actual MCP response, return it directly
+              return decoded;
+            }
+          } catch (e) {
+            // Not JSON, return as-is
+            console.error('[MCPB] Not JSON in double-encoded response:', e.message);
+          }
+        }
+        // Return the response as-is if not double-encoded
+        return response.data;
+      }
+      // Return the response as-is if format is correct
+      return response.data;
     }
 
     if (response.data.result?.content) {
