@@ -13,6 +13,9 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
+// Import railway integration module with V26.7 functionality
+const railwayIntegration = require('./src/railway-integration.js');
+
 // Debug: Check where PORT is coming from
 const hasPORT = Object.prototype.hasOwnProperty.call(process.env, 'PORT');
 console.log('[PORT CHECK]', { value: process.env.PORT, hasPORT });
@@ -71,83 +74,42 @@ app.get('/', (req, res) => {
   res.status(200).send(`V27.0 Server Running on port ${PORT}`);
 });
 
-// MCP Discovery endpoint
-app.get('/mcp/discover', (req, res) => {
-  res.status(200).json({
-    name: 'USDM MCP Platform',
-    version: '27.0',
-    description: 'Enterprise labor analytics platform with V26.7 functionality',
-    status: 'operational',
-    tools: [
-      'start_login',
-      'check_login',
-      'whoami',
-      'get_auth_status',
-      'refresh_tokens',
-      'person_resolver',
-      'activity_for_person_month',
-      'person_revenue_analysis',
-      'person_utilization',
-      'get_timecard_details',
-      'run_dax'
-    ],
-    transport: ['http', 'websocket'],
-    endpoints: {
-      health: '/health',
-      discover: '/mcp/discover',
-      tools: '/api/tools/:toolName'
-    },
-    authentication: {
-      type: 'MSAL',
-      flow: 'device_code',
-      provider: 'Microsoft'
-    },
-    powerbi: {
-      workspace_id: process.env.POWERBI_WORKSPACE_ID || '927b94af-e7ef-4b5a-8b8d-02b0c5450b75',
-      dataset_id: process.env.POWERBI_DATASET_ID || 'ea5298a1-13f0-4629-91ab-14f98163532e',
-      expected_rows: 3238644
-    }
-  });
+// MCP Discovery endpoint - using V26.7 status
+app.get('/mcp/discover', async (req, res) => {
+  try {
+    const status = await railwayIntegration.getStatus();
+    res.status(200).json(status);
+  } catch (error) {
+    console.error('[DISCOVER ERROR]', error);
+    // Fallback to basic status
+    res.status(200).json({
+      name: 'USDM MCP Platform',
+      version: '27.0',
+      status: 'error',
+      error: error.message
+    });
+  }
 });
 
-// CRITICAL: MCP/RPC endpoint - Railway proxy pattern
-app.post('/mcp/rpc', (req, res) => {
+// CRITICAL: MCP/RPC endpoint - Using V26.7 functionality
+app.post('/mcp/rpc', async (req, res) => {
   const { method, params, id } = req.body;
   const authToken = req.headers.authorization?.replace('Bearer ', '');
 
-  console.log(`MCP/RPC: ${method} (auth: ${authToken ? 'yes' : 'no'})`);
+  console.log(`[MCP/RPC] Method: ${method} (auth: ${authToken ? 'yes' : 'no'})`);
 
-  // Handle tool calls
-  if (method === 'tools/call') {
-    const toolName = params?.name;
-
-    if (toolName === 'start_login') {
-      res.json({
-        result: {
-          content: [{
-            type: 'text',
-            text: `Device code authentication starting...
-This endpoint confirms Railway proxy is working.
-Full authentication being integrated.`
-          }]
-        },
-        id: id || null
-      });
-    } else {
-      res.json({
-        result: {
-          tool: toolName,
-          status: 'operational',
-          message: `Tool ${toolName} via MCP/RPC proxy`
-        },
-        id: id || null
-      });
-    }
-  } else {
+  try {
+    const result = await railwayIntegration.handleMcpRpc(method, params);
     res.json({
-      result: {
-        message: 'MCP/RPC endpoint operational',
-        method: method
+      ...result,
+      id: id || null
+    });
+  } catch (error) {
+    console.error('[MCP/RPC ERROR]', error);
+    res.status(500).json({
+      error: {
+        code: -32603,
+        message: error.message
       },
       id: id || null
     });
@@ -195,27 +157,51 @@ app.get('/auth/profile', (req, res) => {
 });
 
 // Direct tool execution endpoint
-app.post('/api/tools/call', (req, res) => {
+app.post('/api/tools/call', async (req, res) => {
   const { tool, args } = req.body;
-  res.json({
-    tool: tool,
-    result: `Direct tool execution: ${tool}`,
-    args: args
-  });
+
+  try {
+    const result = await railwayIntegration.executeTool(tool, args || {});
+    res.json({
+      tool: tool,
+      result: result,
+      success: true
+    });
+  } catch (error) {
+    console.error('[TOOL CALL ERROR]', error);
+    res.status(500).json({
+      tool: tool,
+      error: error.message,
+      success: false
+    });
+  }
 });
 
 // Tools endpoint - Railway pattern
-app.post('/api/tools/:toolName', (req, res) => {
+app.post('/api/tools/:toolName', async (req, res) => {
   const { toolName } = req.params;
   const authToken = req.headers.authorization?.replace('Bearer ', '');
+  const args = req.body;
 
-  res.status(200).json({
-    tool: toolName,
-    status: 'available',
-    authenticated: !!authToken,
-    message: `Tool ${toolName} ready via Railway proxy`,
-    version: '27.0'
-  });
+  try {
+    const result = await railwayIntegration.executeTool(toolName, args || {});
+    res.status(200).json({
+      tool: toolName,
+      result: result,
+      authenticated: !!authToken,
+      version: '27.0',
+      success: true
+    });
+  } catch (error) {
+    console.error(`[TOOL ERROR] ${toolName}:`, error);
+    res.status(500).json({
+      tool: toolName,
+      error: error.message,
+      authenticated: !!authToken,
+      version: '27.0',
+      success: false
+    });
+  }
 });
 
 // 404 handler
@@ -265,6 +251,15 @@ httpServer.listen(PORT, HOST, (err) => {
   console.log('Status: CommonJS fallback mode');
   console.log('Ready to receive requests...');
   console.log('==========================================');
+
+  // Initialize V26.7 modules
+  railwayIntegration.initialize()
+    .then(() => {
+      console.log('[INIT] V26.7 modules initialized successfully');
+    })
+    .catch((err) => {
+      console.error('[INIT ERROR] Failed to initialize V26.7 modules:', err);
+    });
 
   // Micro-delay so frameworks/middleware settle before health is green
   setTimeout(() => {
