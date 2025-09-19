@@ -1,0 +1,311 @@
+{
+  "name": "PipelineAnalysis",
+  "version": "1.0.0",
+  "description": "USDM Sales Pipeline and Opportunity Analytics",
+  "powerbi": {
+    "workspaceId": "ef5c8f43-19c5-44d4-b57e-71b788933b88",
+    "datasetId": "ef5c8f43-19c5-44d4-b57e-71b788933b88"
+  },
+  "tables": {
+    "DIM_Opportunity": {
+      "primaryKey": "OpportunityId",
+      "fields": {
+        "OpportunityId": { "type": "string", "key": true },
+        "AccountId": { "type": "string", "foreignKey": "DIM_Account" },
+        "Opportunity Name": { "type": "string" },
+        "StageName": { "type": "string" },
+        "Status": { "type": "string" },
+        "Amount": { "type": "decimal", "measure": true },
+        "Close Date": { "type": "datetime" },
+        "IsClosed": { "type": "boolean" },
+        "IsWon": { "type": "boolean" },
+        "Forecast Category": { "type": "string" },
+        "Forecast Category Name": { "type": "string" },
+        "OwnerId": { "type": "string", "foreignKey": "Sales Team Member" },
+        "PracticeId": { "type": "string" },
+        "RegionId": { "type": "string" },
+        "PartnerID": { "type": "string" },
+        "Probability": { "type": "decimal" }
+      }
+    },
+    "DIM_Account": {
+      "primaryKey": "AccountId",
+      "fields": {
+        "AccountId": { "type": "string", "key": true },
+        "Account Name": { "type": "string" },
+        "Industry": { "type": "string" },
+        "Territory": { "type": "string" },
+        "OwnerId": { "type": "string" },
+        "CSAT": { "type": "decimal" },
+        "MSA Status": { "type": "string" },
+        "MSA Start Date": { "type": "datetime" },
+        "MSA End Date": { "type": "datetime" }
+      }
+    },
+    "Fact_Opportunity": {
+      "primaryKey": ["OpportunityId", "ProductId"],
+      "type": "fact",
+      "grain": "line-item",
+      "fields": {
+        "OpportunityId": { "type": "string", "foreignKey": "DIM_Opportunity" },
+        "AccountId": { "type": "string", "foreignKey": "DIM_Account" },
+        "OwnerId": { "type": "string", "foreignKey": "Sales Team Member" },
+        "Opportunity Amount": { "type": "decimal", "measure": true },
+        "CloseDate": { "type": "datetime", "rolePlay": "DIM_Date" },
+        "IsClosed": { "type": "boolean" },
+        "IsWon": { "type": "boolean" },
+        "StageName": { "type": "string" },
+        "ProductId": { "type": "string" },
+        "Product Name": { "type": "string" },
+        "Product Type": { "type": "string" },
+        "EstWonOppGP": { "type": "decimal", "measure": true },
+        "ForecastCategory": { "type": "string" },
+        "PracticeId": { "type": "string" },
+        "RegionID": { "type": "string" }
+      }
+    },
+    "Fact_Opportunities_Created": {
+      "primaryKey": "OpportunityID",
+      "type": "fact",
+      "grain": "opportunity-creation",
+      "fields": {
+        "OpportunityID": { "type": "string", "foreignKey": "DIM_Opportunity" },
+        "Created Date": { "type": "datetime", "rolePlay": "DIM_Date" },
+        "Amount": { "type": "decimal", "measure": true },
+        "CreatedById": { "type": "string" },
+        "OwnerId": { "type": "string", "foreignKey": "Sales Team Member" },
+        "AccountId": { "type": "string", "foreignKey": "DIM_Account" },
+        "PracticeID": { "type": "string" },
+        "RegionID": { "type": "string" },
+        "Engagement Type": { "type": "string" },
+        "Change Request": { "type": "boolean" },
+        "Is Sub Renewal": { "type": "boolean" }
+      }
+    },
+    "FACT_OpportunityTeam": {
+      "primaryKey": "oppteammemberID",
+      "type": "bridge",
+      "description": "Attribution bridge for opportunity team members",
+      "fields": {
+        "oppteammemberID": { "type": "string", "key": true },
+        "OpportunityID": { "type": "string", "foreignKey": "DIM_Opportunity" },
+        "UserID": { "type": "string", "foreignKey": "Opportunity Team Member" },
+        "Team Member Role": { "type": "string" },
+        "Role Overview": { "type": "string" },
+        "Key Contributor": { "type": "boolean" },
+        "Involvement Level": { "type": "string" },
+        "Involvement Scope": { "type": "string" },
+        "Amount": { "type": "decimal", "measure": true },
+        "EstGP": { "type": "decimal", "measure": true }
+      }
+    },
+    "Opportunity History": {
+      "primaryKey": "Id",
+      "type": "event",
+      "grain": "event-log",
+      "fields": {
+        "Id": { "type": "string", "key": true },
+        "OpportunityId": { "type": "string", "foreignKey": "DIM_Opportunity" },
+        "CreatedDate": { "type": "datetime", "rolePlay": "DIM_Date" },
+        "StageName": { "type": "string" },
+        "Amount": { "type": "decimal" },
+        "PrevAmount": { "type": "decimal" },
+        "CloseDate": { "type": "datetime" },
+        "PrevCloseDate": { "type": "datetime" },
+        "ExpectedRevenue": { "type": "decimal" },
+        "Probability": { "type": "decimal" },
+        "ForecastCategory": { "type": "string" }
+      }
+    },
+    "Sales Team Member": {
+      "primaryKey": "UserId",
+      "fields": {
+        "UserId": { "type": "string", "key": true },
+        "Sales Team Member": { "type": "string" },
+        "Manager Name": { "type": "string" },
+        "Team Leader Name": { "type": "string" },
+        "Reports To Name": { "type": "string" },
+        "Role Function": { "type": "string" },
+        "Department Role Function": { "type": "string" },
+        "PS Commission Rate": { "type": "decimal" },
+        "Staffing Commission Rate": { "type": "decimal" },
+        "Incentive Commission Rate": { "type": "decimal" },
+        "Renewal Commission Rate": { "type": "decimal" },
+        "BD Commission Rate": { "type": "decimal" },
+        "Active AM Growth": { "type": "boolean" },
+        "Quota Type": { "type": "string" }
+      }
+    },
+    "Opportunity Team Member": {
+      "primaryKey": "UserId",
+      "fields": {
+        "UserId": { "type": "string", "key": true },
+        "Team Member Role": { "type": "string" },
+        "Role Overview": { "type": "string" },
+        "Involvement Level": { "type": "string" },
+        "Key Contributor": { "type": "boolean" }
+      }
+    },
+    "DIM_Date": {
+      "primaryKey": "Full_Date",
+      "fields": {
+        "Full_Date": { "type": "datetime", "key": true },
+        "Day_of_Week_Name": { "type": "string" },
+        "Week_Date": { "type": "datetime" },
+        "Week_Of_Year": { "type": "integer" },
+        "Month_Date": { "type": "datetime" },
+        "Month_Number": { "type": "integer" },
+        "MonthEndDate": { "type": "datetime" },
+        "Quarter_Date": { "type": "datetime" },
+        "Quarter_Number": { "type": "integer" },
+        "QuarterEndDate": { "type": "datetime" },
+        "Year_Date": { "type": "datetime" },
+        "Year_Number": { "type": "integer" },
+        "YearEndDate": { "type": "datetime" },
+        "IsThisMonth": { "type": "boolean" },
+        "IsLastMonth": { "type": "boolean" },
+        "IsNextMonth": { "type": "boolean" },
+        "Within_Next_30_Days": { "type": "boolean" },
+        "Within_Last_30_Days": { "type": "boolean" }
+      }
+    },
+    "Pipeline Measures": {
+      "type": "measures",
+      "description": "Pre-built DAX measures for pipeline analytics",
+      "measures": {
+        "Opportunity Amount (Open)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[Opportunity Amount]), 'DIM_Opportunity'[IsClosed] = FALSE())"
+        },
+        "Opportunity Amount (Closed-Won)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[Opportunity Amount]), 'DIM_Opportunity'[IsWon] = TRUE())"
+        },
+        "Opportunity Amount (Closed-Lost)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[Opportunity Amount]), 'DIM_Opportunity'[IsClosed] = TRUE() && 'DIM_Opportunity'[IsWon] = FALSE())"
+        },
+        "EstWonOppGP (Open)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[EstWonOppGP]), 'DIM_Opportunity'[IsClosed] = FALSE())"
+        },
+        "EstWonOppGP (Closed-Won)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[EstWonOppGP]), 'DIM_Opportunity'[IsWon] = TRUE())"
+        },
+        "Created Opportunity Amount": {
+          "dax": "SUM('Fact_Opportunities_Created'[Amount])"
+        },
+        "Pipeline $ (Open, Qualified)": {
+          "dax": "CALCULATE(SUM('Fact_Opportunity'[Opportunity Amount]), 'DIM_Opportunity'[IsClosed] = FALSE(), 'DIM_Opportunity'[StageName] <> \"Prospecting\")"
+        }
+      }
+    },
+    "boxfolderid": {
+      "primaryKey": "OpportunityId",
+      "description": "Box folder linkage for opportunity documents",
+      "fields": {
+        "OpportunityId": { "type": "string", "key": true, "foreignKey": "DIM_Opportunity" },
+        "BoxFolderID": { "type": "string" },
+        "BoxObjectName": { "type": "string" },
+        "BoxRecordID": { "type": "string" },
+        "OpportunityName": { "type": "string" }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "from": "Fact_Opportunity.OpportunityId",
+      "to": "DIM_Opportunity.OpportunityId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Fact_Opportunity.AccountId",
+      "to": "DIM_Account.AccountId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Fact_Opportunity.OwnerId",
+      "to": "Sales Team Member.UserId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Fact_Opportunity.CloseDate",
+      "to": "DIM_Date.Full_Date",
+      "cardinality": "many-to-one",
+      "active": true,
+      "rolePlay": "bookings"
+    },
+    {
+      "from": "Fact_Opportunities_Created.OpportunityID",
+      "to": "DIM_Opportunity.OpportunityId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Fact_Opportunities_Created.Created Date",
+      "to": "DIM_Date.Full_Date",
+      "cardinality": "many-to-one",
+      "active": true,
+      "rolePlay": "cohorts"
+    },
+    {
+      "from": "FACT_OpportunityTeam.OpportunityID",
+      "to": "DIM_Opportunity.OpportunityId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "FACT_OpportunityTeam.UserID",
+      "to": "Opportunity Team Member.UserId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Opportunity History.OpportunityId",
+      "to": "DIM_Opportunity.OpportunityId",
+      "cardinality": "many-to-one",
+      "active": true
+    },
+    {
+      "from": "Opportunity History.CreatedDate",
+      "to": "DIM_Date.Full_Date",
+      "cardinality": "many-to-one",
+      "active": false,
+      "rolePlay": "history",
+      "note": "Activate with USERELATIONSHIP() for as-of measures"
+    },
+    {
+      "from": "boxfolderid.OpportunityId",
+      "to": "DIM_Opportunity.OpportunityId",
+      "cardinality": "many-to-one",
+      "active": true
+    }
+  ],
+  "analyticalLayers": {
+    "pipelineHealth": {
+      "description": "Open vs Closed, Won vs Lost, Est. GP vs Actual",
+      "primaryTables": ["Fact_Opportunity", "DIM_Opportunity"]
+    },
+    "salesPerformance": {
+      "description": "Revenue by Rep, Territory, Practice",
+      "primaryTables": ["Fact_Opportunity", "Sales Team Member"]
+    },
+    "timeAnalysis": {
+      "description": "Created vs Closed Dates, Pipeline Aging",
+      "primaryTables": ["Fact_Opportunities_Created", "Opportunity History", "DIM_Date"]
+    },
+    "hygieneMetrics": {
+      "description": "Opps with/without Box folders, SLA for folder creation",
+      "primaryTables": ["DIM_Opportunity", "boxfolderid"]
+    },
+    "conversionFunnels": {
+      "description": "Stage Progression → Win Rates → Revenue Impact",
+      "primaryTables": ["Opportunity History", "DIM_Opportunity"]
+    }
+  },
+  "implementationNotes": {
+    "singleDirection": "Keep single-direction filters from dims → facts. No bi-directional relationships.",
+    "dateRolePlay": "Use USERELATIONSHIP() for non-primary date roles (history/as-of measures).",
+    "bridgeTable": "Treat FACT_OpportunityTeam as a bridge (no $ stored/used there; allocate from fact via weights).",
+    "boxFolderId": "Store BoxFolderID as text; enforce one primary folder per Opp if policy requires."
+  }
+}

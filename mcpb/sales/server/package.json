@@ -1,0 +1,16 @@
+{
+  "name": "usdm-sales-mcp-server",
+  "version": "1.0.0",
+  "description": "USDM Sales Analytics MCP Server",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

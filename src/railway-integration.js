@@ -34,16 +34,21 @@ const DOMAIN_CONFIG = {
   sales: {
     datasetId: process.env.SALES_DATASET_ID || 'ef5c8f43-19c5-44d4-b57e-71b788933b88',
     tools: [
-      // Pipeline analytics
+      // Core Pipeline analytics
       'get_pipeline_summary', 'get_opportunity_forecast',
-      // Opportunity management
       'get_opportunity_details', 'get_deal_velocity',
       // Account analytics
       'get_account_revenue', 'get_account_health',
       // Sales rep performance
       'get_rep_performance', 'get_rep_conversion',
       // Product & Team analytics
-      'get_product_revenue', 'get_team_pipeline'
+      'get_product_revenue', 'get_team_pipeline',
+      // Advanced Power Tools
+      'get_win_loss_analysis', 'get_deal_aging',
+      'get_territory_performance', 'get_renewal_forecast',
+      'get_monthly_trend', 'get_top_deals',
+      'get_lead_conversion', 'get_quota_attainment',
+      'get_activity_metrics', 'get_executive_dashboard'
     ]
   }
 };
@@ -128,12 +133,10 @@ function getToolHandlers() {
     'get_cache_stats': laborTools.get_cache_stats,
     'clear_cache': laborTools.clear_cache,
 
-    // === SALES DOMAIN TOOLS ===
-    // Pipeline analytics
+    // === SALES DOMAIN TOOLS (20 Total) ===
+    // Core Pipeline analytics
     'get_pipeline_summary': salesTools.get_pipeline_summary,
     'get_opportunity_forecast': salesTools.get_opportunity_forecast,
-
-    // Opportunity management
     'get_opportunity_details': salesTools.get_opportunity_details,
     'get_deal_velocity': salesTools.get_deal_velocity,
 
@@ -147,7 +150,19 @@ function getToolHandlers() {
 
     // Product & Team analytics
     'get_product_revenue': salesTools.get_product_revenue,
-    'get_team_pipeline': salesTools.get_team_pipeline
+    'get_team_pipeline': salesTools.get_team_pipeline,
+
+    // Advanced Power Tools (New)
+    'get_win_loss_analysis': salesTools.get_win_loss_analysis,
+    'get_deal_aging': salesTools.get_deal_aging,
+    'get_territory_performance': salesTools.get_territory_performance,
+    'get_renewal_forecast': salesTools.get_renewal_forecast,
+    'get_monthly_trend': salesTools.get_monthly_trend,
+    'get_top_deals': salesTools.get_top_deals,
+    'get_lead_conversion': salesTools.get_lead_conversion,
+    'get_quota_attainment': salesTools.get_quota_attainment,
+    'get_activity_metrics': salesTools.get_activity_metrics,
+    'get_executive_dashboard': salesTools.get_executive_dashboard
   };
 }
 
@@ -267,8 +282,8 @@ async function getStatus() {
 
   return {
     name: 'USDM MCP Platform',
-    version: '27.0',
-    description: 'Multi-domain analytics platform (Labor + Sales)',
+    version: '27.1',
+    description: 'Multi-domain analytics platform with Enhanced Sales (Labor + Sales)',
     status: 'operational',
     tools: Object.keys(toolHandlers),
     toolCount: {

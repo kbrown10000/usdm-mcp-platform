@@ -1,0 +1,153 @@
+{
+  "dxt_version": "0.1",
+  "name": "usdm-sales-mcp",
+  "version": "28.0.0",
+  "description": "USDM Sales Analytics MCP v28.0 - 100% architecture compliance with workspace isolation",
+  "author": {
+    "name": "USDM Platform Team"
+  },
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "server/sales-proxy.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/sales-proxy.mjs"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "start_login",
+      "description": "Start Microsoft authentication using device code flow"
+    },
+    {
+      "name": "check_login",
+      "description": "Check if authentication is complete"
+    },
+    {
+      "name": "whoami",
+      "description": "Get authenticated user profile"
+    },
+    {
+      "name": "get_auth_status",
+      "description": "Get current authentication status"
+    },
+    {
+      "name": "refresh_tokens",
+      "description": "Refresh authentication tokens"
+    },
+    {
+      "name": "logout",
+      "description": "Clear all authentication tokens"
+    },
+    {
+      "name": "get_data_source_info",
+      "description": "Debug tool to verify which dataset is being targeted"
+    },
+    {
+      "name": "get_pipeline_summary",
+      "description": "Get sales pipeline overview by stage with counts and amounts"
+    },
+    {
+      "name": "get_opportunity_forecast",
+      "description": "Get weighted revenue forecast based on probability"
+    },
+    {
+      "name": "get_opportunity_details",
+      "description": "Get detailed opportunity information with filters"
+    },
+    {
+      "name": "get_deal_velocity",
+      "description": "Analyze sales cycle metrics and deal movement speed"
+    },
+    {
+      "name": "get_account_revenue",
+      "description": "Get account-level revenue analysis"
+    },
+    {
+      "name": "get_account_health",
+      "description": "Calculate account health scores based on activity"
+    },
+    {
+      "name": "get_rep_performance",
+      "description": "Get sales rep performance metrics"
+    },
+    {
+      "name": "get_rep_conversion",
+      "description": "Analyze conversion rates by rep and stage"
+    },
+    {
+      "name": "get_product_revenue",
+      "description": "Get product performance and revenue analysis"
+    },
+    {
+      "name": "get_team_pipeline",
+      "description": "Get team-level pipeline metrics"
+    },
+    {
+      "name": "get_win_loss_analysis",
+      "description": "Analyze why deals are won or lost"
+    },
+    {
+      "name": "get_deal_aging",
+      "description": "Find stuck deals needing attention"
+    },
+    {
+      "name": "get_territory_performance",
+      "description": "Get geographic performance metrics"
+    },
+    {
+      "name": "get_renewal_forecast",
+      "description": "Track subscription renewal forecasts"
+    },
+    {
+      "name": "get_monthly_trend",
+      "description": "Analyze sales trends over time"
+    },
+    {
+      "name": "get_top_deals",
+      "description": "Get biggest opportunities in pipeline"
+    },
+    {
+      "name": "get_lead_conversion",
+      "description": "Get funnel conversion metrics"
+    },
+    {
+      "name": "get_quota_attainment",
+      "description": "Track performance vs quota targets"
+    },
+    {
+      "name": "get_activity_metrics",
+      "description": "Get sales activity tracking metrics"
+    },
+    {
+      "name": "get_executive_dashboard",
+      "description": "Get C-level executive summary metrics"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "sales_pipeline_review",
+      "text": "Show me the current sales pipeline with stage breakdown and top opportunities"
+    },
+    {
+      "name": "account_analysis",
+      "text": "Analyze our top accounts by revenue and health"
+    },
+    {
+      "name": "team_performance",
+      "text": "How is the sales team performing? Show rep metrics and conversion rates"
+    },
+    {
+      "name": "forecast_review",
+      "text": "What's our weighted revenue forecast for the next 90 days?"
+    },
+    {
+      "name": "deal_analysis",
+      "text": "Which deals need attention? Show aging opportunities and stuck deals"
+    }
+  ]
+}

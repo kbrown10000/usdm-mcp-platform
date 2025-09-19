@@ -37,13 +37,16 @@ async function withDaxLimit(queryId, queryFn) {
 }
 
 /**
- * Execute DAX query against PowerBI dataset
- * CRITICAL: Preserves exact error handling and response format from V26.7
+ * @deprecated Use executeDaxQuery(query, datasetId) instead
+ * CRITICAL: This function uses hardcoded Labor dataset - DO NOT USE
  * @param {string} query - DAX query to execute
  * @param {string} powerbiToken - Valid PowerBI access token
  * @returns {Promise<Object>} - Query result with success flag, data, and rowCount
  */
 async function executeDax(query, powerbiToken) {
+  // DEPRECATED: This function can cause accidental routing to wrong dataset
+  console.error('[executeDax] WARNING: Deprecated function called. Use executeDaxQuery(query, datasetId) instead.');
+
   if (!powerbiToken) {
     throw new Error('Not authenticated. PowerBI token required.');
   }
@@ -166,8 +169,153 @@ function getQueryStatus() {
   };
 }
 
+/**
+ * Execute DAX query with explicit dataset ID and workspace ID
+ * Added for multi-domain support (Labor + Sales)
+ * @param {string} query - DAX query to execute
+ * @param {string} datasetId - Target dataset ID (REQUIRED)
+ * @param {string} workspaceId - Target workspace ID (REQUIRED)
+ * @param {string} powerbiToken - Valid PowerBI access token (optional, uses global token if not provided)
+ * @returns {Promise<Object>} - Query result with success flag, data, and rowCount
+ */
+async function executeDaxQuery(query, datasetId, workspaceId, powerbiToken) {
+  // CRITICAL: Require dataset ID and workspace ID to prevent accidental fallbacks
+  if (!datasetId) {
+    throw new Error('[executeDaxQuery] datasetId is REQUIRED. No fallback allowed.');
+  }
+  if (!workspaceId) {
+    throw new Error('[executeDaxQuery] workspaceId is REQUIRED. No fallback allowed.');
+  }
+
+  // GUARD: Prevent Sales queries against Labor dataset
+  const LABOR_DATASET_ID = 'ea5298a1-13f0-4629-91ab-14f98163532e';
+  if (query.includes('DIM_Opportunity') && datasetId === LABOR_DATASET_ID) {
+    throw new Error(`[executeDaxQuery] BLOCKED: Refusing to run Sales query (contains DIM_Opportunity) against Labor dataset in workspace ${workspaceId}`);
+  }
+
+  // Get the token from auth service if not provided
+  if (!powerbiToken) {
+    const { getTokens } = await import('../auth/msal-auth.mjs');
+    const tokens = getTokens();
+    powerbiToken = tokens?.powerbi;
+  }
+
+  if (!powerbiToken) {
+    throw new Error(`Not authenticated. PowerBI token required for workspace ${workspaceId}.`);
+  }
+
+  const targetDatasetId = datasetId;
+
+  try {
+    const response = await axios.post(
+      `https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/datasets/${targetDatasetId}/executeQueries`,
+      {
+        queries: [{ query }],
+        serializerSettings: { includeNulls: true }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${powerbiToken}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    const result = response.data.results[0];
+    if (result.error) {
+      const errorMsg = result.error.message || 'Unknown error';
+      let suggestion = '';
+
+      if (errorMsg.includes('table')) {
+        suggestion = '\n💡 Suggestion: Check table names - Sales uses DIM_Opportunity, Fact_Opportunity, etc.';
+      } else if (errorMsg.includes('column')) {
+        suggestion = '\n💡 Suggestion: Column names are case-sensitive. Check the exact field names.';
+      } else if (errorMsg.includes('syntax')) {
+        suggestion = '\n💡 Suggestion: Check DAX syntax - dates need DATE(year,month,day) format';
+      }
+
+      throw new Error(`PowerBI error in workspace ${workspaceId}: ${errorMsg}${suggestion}`);
+    }
+
+    return {
+      success: true,
+      data: result.tables[0]?.rows || [],
+      rowCount: result.tables[0]?.rows?.length || 0,
+      datasetId: targetDatasetId,
+      workspaceId: workspaceId
+    };
+
+  } catch (error) {
+    if (error.response?.status === 401) {
+      throw new Error(`PowerBI token expired for workspace ${workspaceId}. Please refresh authentication.`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Assert Sales dataset has required tables
+ * Preflight validation for Sales MCP startup
+ * @param {string} datasetId - Sales dataset ID to validate
+ * @param {string} workspaceId - Sales workspace ID to validate
+ * @param {string} powerbiToken - Valid PowerBI access token
+ * @returns {Promise<void>} - Throws if validation fails
+ */
+async function assertSalesDataset(datasetId, workspaceId, powerbiToken) {
+  if (!datasetId) {
+    throw new Error('[assertSalesDataset] datasetId is REQUIRED');
+  }
+  if (!workspaceId) {
+    throw new Error('[assertSalesDataset] workspaceId is REQUIRED');
+  }
+
+  // Get token if not provided
+  if (!powerbiToken) {
+    const { getTokens } = await import('../auth/msal-auth.mjs');
+    const tokens = getTokens();
+    powerbiToken = tokens?.powerbi;
+  }
+
+  if (!powerbiToken) {
+    throw new Error(`[assertSalesDataset] PowerBI token required for validation of workspace ${workspaceId}`);
+  }
+
+  try {
+    // Check for Sales-specific tables
+    const testQuery = `
+EVALUATE
+ROW(
+  "HasDimOpportunity", IF(ISBLANK(COUNTROWS('DIM_Opportunity')), 0, 1),
+  "HasFactOpportunity", IF(ISBLANK(COUNTROWS('Fact_Opportunity')), 0, 1),
+  "HasDimAccount", IF(ISBLANK(COUNTROWS('DIM_Account')), 0, 1)
+)`;
+
+    const result = await executeDaxQuery(testQuery, datasetId, workspaceId, powerbiToken);
+    const validation = result.data?.[0];
+
+    const errors = [];
+    if (validation?.['[HasDimOpportunity]'] !== 1) errors.push('DIM_Opportunity');
+    if (validation?.['[HasFactOpportunity]'] !== 1) errors.push('Fact_Opportunity');
+    if (validation?.['[HasDimAccount]'] !== 1) errors.push('DIM_Account');
+
+    if (errors.length > 0) {
+      throw new Error(`[assertSalesDataset] Dataset ${datasetId} in workspace ${workspaceId} missing required Sales tables: ${errors.join(', ')}`);
+    }
+
+    console.error(`[assertSalesDataset] ✅ Sales dataset validated: ${datasetId} in workspace ${workspaceId}`);
+  } catch (error) {
+    if (error.message?.includes('missing required Sales tables')) {
+      throw error;
+    }
+    throw new Error(`[assertSalesDataset] Validation failed for workspace ${workspaceId}: ${error.message}`);
+  }
+}
+
 export {
   executeDax,
+  executeDaxQuery,  // Added for multi-domain support
+  assertSalesDataset,  // Added for preflight validation
   validateDataset,
   getDatasetInfo,
   getQueryStatus,
@@ -180,6 +328,8 @@ export {
 
 export default {
   executeDax,
+  executeDaxQuery,  // Added for multi-domain support
+  assertSalesDataset,  // Added for preflight validation
   validateDataset,
   getDatasetInfo,
   getQueryStatus,

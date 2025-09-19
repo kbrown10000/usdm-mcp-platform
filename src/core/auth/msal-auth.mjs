@@ -11,6 +11,7 @@
 
 import { PublicClientApplication } from '@azure/msal-node';
 import axios from 'axios';
+import * as tokenCache from './token-cache.mjs';
 
 // ⚠️ DO NOT MODIFY: Production IDs from V26.7 golden source
 const TENANT_ID = process.env.AZURE_TENANT_ID || '18c250cf-2ef7-4eeb-b6fb-94660f7867e0';
@@ -38,10 +39,81 @@ let pendingAuth = null;
 let cachedAccount = null;  // Store the MSAL account object
 
 /**
+ * Retry a function with exponential backoff
+ * @param {Function} fn - Function to retry
+ * @param {number} maxRetries - Maximum number of retries (default: 3)
+ * @param {number} baseDelay - Base delay in milliseconds (default: 1000)
+ * @returns {Promise} Result of the function
+ */
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.error(`⏳ Retry ${attempt + 1}/${maxRetries} after ${delay}ms - Error: ${error.message}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Start Microsoft authentication using device code flow
  * @returns {Object} Device code and instructions
  */
 async function startLogin() {
+  // V26.7 HARDENED: Use exact scopes from working implementation
+  const deviceFlowScopes = [
+    'openid',
+    'profile',
+    'offline_access',
+    'api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation',  // USDM API scope
+    'User.Read'  // Graph scope
+  ];
+
+  // Check cache first
+  console.error('🔍 Checking token cache...');
+  const cachedData = await tokenCache.load(TENANT_ID, CLIENT_ID, deviceFlowScopes);
+
+  if (cachedData && cachedData.tokens && cachedData.account) {
+    console.error('✅ Valid cached tokens found');
+
+    // Restore tokens from cache
+    powerbiToken = cachedData.tokens.powerbi;
+    graphToken = cachedData.tokens.graph;
+    apiToken = cachedData.tokens.usdm;
+    cachedAccount = cachedData.account;
+    authenticationComplete = true;
+
+    // Verify at least one token exists
+    if (graphToken || apiToken || powerbiToken) {
+      const remainingMinutes = Math.round((cachedData.expiry - Date.now()) / (60 * 1000));
+      return {
+        success: true,
+        cached: true,
+        username: cachedAccount.username,
+        tokens: {
+          graph: !!graphToken,
+          usdm: !!apiToken,
+          powerbi: !!powerbiToken
+        },
+        message: `✅ Authenticated from cache (${remainingMinutes} min remaining)\n` +
+                 `User: ${cachedAccount.username}\n` +
+                 `Graph: ${graphToken ? '✅' : '❌'} | ` +
+                 `USDM: ${apiToken ? '✅' : '❌'} | ` +
+                 `PowerBI: ${powerbiToken ? '✅' : '❌'}`
+      };
+    }
+  }
+
   // V26.7: Initialize auth state properly
   pendingAuth = {
     deviceCode: null,
@@ -51,15 +123,6 @@ async function startLogin() {
   };
 
   console.error('🔐 Starting device code flow...');
-
-  // V26.7 HARDENED: Use exact scopes from working implementation
-  const deviceFlowScopes = [
-    'openid',
-    'profile',
-    'offline_access',
-    'api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation',  // USDM API scope
-    'User.Read'  // Graph scope
-  ];
 
   // Start device code flow with V26.7 scopes
   pendingAuth.promise = pca.acquireTokenByDeviceCode({
@@ -77,9 +140,9 @@ async function startLogin() {
     }
   });
 
-  // Wait for device code with proper timeout
+  // Wait for device code with proper timeout (20 seconds)
   let attempts = 0;
-  while (!pendingAuth.deviceCode && attempts < 50) {
+  while (!pendingAuth.deviceCode && attempts < 200) { // 200 × 100ms = 20 seconds
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
@@ -89,7 +152,7 @@ async function startLogin() {
   if (!pendingAuth.deviceCode) {
     return {
       success: false,
-      error: 'Failed to get device code after 5 seconds'
+      error: 'Failed to get device code after 20 seconds'
     };
   }
 
@@ -111,10 +174,12 @@ async function startLogin() {
 
       // STEP 1: Get Graph token - DO NOT CHANGE ORDER
       try {
-        const graphRes = await pca.acquireTokenSilent({
-          account: result.account,
-          scopes: ['User.Read']
-        });
+        const graphRes = await retryWithBackoff(async () => {
+          return await pca.acquireTokenSilent({
+            account: result.account,
+            scopes: ['User.Read']
+          });
+        }, 3, 1000);
         graphToken = graphRes.accessToken;
         console.error('✅ Graph token acquired');
       } catch (e) {
@@ -123,10 +188,12 @@ async function startLogin() {
 
       // STEP 2: Get USDM API token - DO NOT CHANGE ORDER
       try {
-        const usdmRes = await pca.acquireTokenSilent({
-          account: result.account,
-          scopes: ['api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation']
-        });
+        const usdmRes = await retryWithBackoff(async () => {
+          return await pca.acquireTokenSilent({
+            account: result.account,
+            scopes: ['api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation']
+          });
+        }, 3, 1000);
         apiToken = usdmRes.accessToken;
         console.error('✅ USDM API token acquired');
       } catch (e) {
@@ -136,10 +203,12 @@ async function startLogin() {
       // STEP 3: Get PowerBI token - CRITICAL: Use .default scope
       // MUST use .default scope for PowerBI - individual scopes don't work!
       try {
-        const pbRes = await pca.acquireTokenSilent({
-          account: result.account,
-          scopes: ['https://analysis.windows.net/powerbi/api/.default']
-        });
+        const pbRes = await retryWithBackoff(async () => {
+          return await pca.acquireTokenSilent({
+            account: result.account,
+            scopes: ['https://analysis.windows.net/powerbi/api/.default']
+          });
+        }, 3, 1000);
         powerbiToken = pbRes.accessToken;
         console.error('✅ PowerBI token acquired');
       } catch (e) {
@@ -147,6 +216,16 @@ async function startLogin() {
       }
 
       authenticationComplete = true;
+
+      // Save tokens to cache
+      await tokenCache.save(
+        { powerbi: powerbiToken, graph: graphToken, usdm: apiToken },
+        cachedAccount,
+        TENANT_ID,
+        CLIENT_ID,
+        deviceFlowScopes
+      );
+      console.error('💾 Tokens saved to cache');
     }
   }).catch(error => {
     console.error('❌ Auth failed:', error.message);
@@ -331,17 +410,31 @@ function getUSDMToken() {
 /**
  * Clear all tokens and authentication state
  */
-function logout() {
+async function logout() {
   powerbiToken = null;
   graphToken = null;
   apiToken = null;
   authenticationComplete = false;
   pendingAuth = null;
+
+  // Clear cache for current account
+  if (cachedAccount) {
+    const deviceFlowScopes = [
+      'openid',
+      'profile',
+      'offline_access',
+      'api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation',
+      'User.Read'
+    ];
+
+    await tokenCache.clear(TENANT_ID, CLIENT_ID, deviceFlowScopes);
+  }
+
   cachedAccount = null;
 
   return {
     success: true,
-    message: 'Successfully logged out. All tokens cleared.'
+    message: 'Successfully logged out. All tokens and cache cleared.'
   };
 }
 
@@ -403,6 +496,26 @@ async function refreshTokens() {
       console.error('PowerBI refresh error:', e.message);
     }
 
+    // Save refreshed tokens to cache
+    if (results.graph || results.usdm || results.powerbi) {
+      const deviceFlowScopes = [
+        'openid',
+        'profile',
+        'offline_access',
+        'api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19/user_impersonation',
+        'User.Read'
+      ];
+
+      await tokenCache.save(
+        { powerbi: powerbiToken, graph: graphToken, usdm: apiToken },
+        cachedAccount,
+        TENANT_ID,
+        CLIENT_ID,
+        deviceFlowScopes
+      );
+      console.error('💾 Refreshed tokens saved to cache');
+    }
+
     return {
       success: true,
       refreshed: results,
@@ -418,6 +531,35 @@ async function refreshTokens() {
   }
 }
 
+/**
+ * Get token cache statistics
+ * @returns {Promise<Object>} Cache statistics
+ */
+async function getCacheStats() {
+  return await tokenCache.getCacheStats();
+}
+
+/**
+ * Clear all token caches
+ * @returns {Promise<boolean>} Success status
+ */
+async function clearAllCaches() {
+  const result = await tokenCache.clearAll();
+
+  // Also clear in-memory tokens
+  powerbiToken = null;
+  graphToken = null;
+  apiToken = null;
+  authenticationComplete = false;
+  pendingAuth = null;
+  cachedAccount = null;
+
+  return {
+    success: result,
+    message: result ? 'All token caches cleared successfully' : 'Failed to clear some caches'
+  };
+}
+
 // Export all functions and getters
 export {
   // Core authentication functions
@@ -426,6 +568,10 @@ export {
   whoami,
   logout,
   refreshTokens,
+
+  // Cache management
+  getCacheStats,
+  clearAllCaches,
 
   // Status and token getters
   getAuthStatus,
