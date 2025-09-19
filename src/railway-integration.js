@@ -20,8 +20,8 @@ async function loadModules() {
     msalAuth = await import('./core/auth/msal-auth.mjs');
     powerbiConnector = await import('./core/powerbi/connector.mjs');
     laborTools = await import('./core/tools/labor-tools.mjs');
-    // DAX builder not yet implemented, using queries module instead
-    daxBuilder = await import('./core/dax/queries.mjs');
+    // DAX builder with V26.7 optimized patterns
+    daxBuilder = await import('./core/dax/builder.mjs');
 
     modulesLoaded = true;
     console.log('[MODULES] V26.7 modules loaded successfully');
