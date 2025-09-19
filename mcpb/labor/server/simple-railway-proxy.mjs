@@ -156,25 +156,39 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
       };
     }
 
-    // Handle double-encoded responses from Railway (bug workaround)
+    // CRITICAL FIX: Railway is double-encoding ALL responses
+    // The response.data.content[0].text contains a JSON string that needs to be parsed
     if (response.data.content && Array.isArray(response.data.content)) {
       const firstContent = response.data.content[0];
       if (firstContent?.type === 'text' && typeof firstContent.text === 'string') {
-        // Check if the text is JSON-encoded
-        if (firstContent.text.startsWith('{') && firstContent.text.includes('"content"')) {
+        // Railway ALWAYS returns JSON-encoded content in text field
+        if (firstContent.text.startsWith('{')) {
           try {
             const decoded = JSON.parse(firstContent.text);
             if (decoded.content) {
-              // Return the decoded content
+              // This is the ACTUAL MCP response we need to return
+              console.error('[PROXY] Decoded double-encoded response');
               return decoded;
             }
           } catch (e) {
-            // Not JSON, return as-is
+            console.error('[PROXY] Failed to decode, returning raw text');
+            // If it's not JSON, return as formatted text
+            return {
+              content: [{
+                type: 'text',
+                text: firstContent.text
+              }]
+            };
           }
         }
+        // Not JSON, return the text directly
+        return {
+          content: [{
+            type: 'text',
+            text: firstContent.text
+          }]
+        };
       }
-      // Return Railway's response as-is
-      return response.data;
     }
 
     // Handle MCP/RPC result format
