@@ -17,6 +17,12 @@ if (process.env.NODE_ENV !== 'production') {
 const hasPORT = Object.prototype.hasOwnProperty.call(process.env, 'PORT');
 console.log('[PORT CHECK]', { value: process.env.PORT, hasPORT });
 
+// Safety: If in production and PORT is 8080, ignore it (likely from env file)
+if (process.env.NODE_ENV === 'production' && process.env.PORT === '8080') {
+  console.warn('[PORT SAFETY] Overriding suspicious PORT=8080 in production');
+  delete process.env.PORT;
+}
+
 // Railway provides PORT env var - default to 8080 for local dev
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';

@@ -4,6 +4,9 @@ node_modules
 *.md
 .env
 .env.local
+.env.railway
+.env.railway.template
+*.env
 dist
 .vscode
 .idea
