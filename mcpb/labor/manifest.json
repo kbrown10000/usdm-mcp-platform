@@ -1,0 +1,92 @@
+{
+  "dxt_version": "0.1",
+  "name": "usdm-labor-mcp",
+  "version": "27.0.0",
+  "description": "USDM Labor Analytics MCP - Enterprise labor analysis with PowerBI integration",
+  "author": {
+    "name": "USDM Platform Team"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.mjs"],
+      "env": {
+        "AZURE_TENANT_ID": "18c250cf-2ef7-4eeb-b6fb-94660f7867e0",
+        "AZURE_CLIENT_ID": "8b84dc3b-a9ff-43ed-9d35-571f757e9c19",
+        "POWERBI_WORKSPACE_ID": "927b94af-e7ef-4b5a-8b8d-02b0c5450b75",
+        "POWERBI_DATASET_ID": "ea5298a1-13f0-4629-91ab-14f98163532e",
+        "API_AUDIENCE": "api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "start_login",
+      "description": "Start device code authentication flow with Microsoft"
+    },
+    {
+      "name": "check_login",
+      "description": "Check authentication status and complete login"
+    },
+    {
+      "name": "whoami",
+      "description": "Get current authenticated user information"
+    },
+    {
+      "name": "get_auth_status",
+      "description": "Get detailed authentication status and token validity"
+    },
+    {
+      "name": "refresh_tokens",
+      "description": "Refresh authentication tokens"
+    },
+    {
+      "name": "person_resolver",
+      "description": "Find and resolve team member names with fuzzy matching"
+    },
+    {
+      "name": "activity_for_person_month",
+      "description": "Get monthly activity summary for a specific person"
+    },
+    {
+      "name": "person_revenue_analysis",
+      "description": "Analyze revenue metrics and utilization for a person"
+    },
+    {
+      "name": "person_utilization",
+      "description": "Calculate utilization rates and billable hours for a person"
+    },
+    {
+      "name": "get_timecard_details",
+      "description": "Get detailed timecard entries with notes for a person and date range"
+    },
+    {
+      "name": "run_dax",
+      "description": "Execute custom DAX queries against the PowerBI dataset"
+    },
+    {
+      "name": "get_cache_stats",
+      "description": "Get cache performance statistics and hit rates"
+    },
+    {
+      "name": "clear_cache",
+      "description": "Clear the cache for all or specific entries"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "person_analysis",
+      "text": "Analyze the work patterns and productivity for {person_name} during {time_period}"
+    },
+    {
+      "name": "timecard_review",
+      "text": "Review timecard entries with notes for {person_name} in {month} {year}"
+    },
+    {
+      "name": "utilization_report",
+      "text": "Generate a utilization report showing billable vs non-billable hours for {person_name}"
+    }
+  ]
+}
