@@ -8,16 +8,17 @@
   },
   "server": {
     "type": "node",
-    "entry_point": "server/index.mjs",
+    "entry_point": "server/railway-proxy-standalone.mjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/server/index.mjs"],
+      "args": ["${__dirname}/server/railway-proxy-standalone.mjs"],
       "env": {
         "AZURE_TENANT_ID": "18c250cf-2ef7-4eeb-b6fb-94660f7867e0",
         "AZURE_CLIENT_ID": "8b84dc3b-a9ff-43ed-9d35-571f757e9c19",
         "POWERBI_WORKSPACE_ID": "927b94af-e7ef-4b5a-8b8d-02b0c5450b75",
         "POWERBI_DATASET_ID": "ea5298a1-13f0-4629-91ab-14f98163532e",
-        "API_AUDIENCE": "api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19"
+        "API_AUDIENCE": "api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19",
+        "RAILWAY_BACKEND_URL": "https://usdm-mcp-platform-production.up.railway.app"
       }
     }
   },

@@ -1,0 +1,36 @@
+# Test and temporary files
+test-extract/
+*.test.js
+*.test.mjs
+*.spec.js
+*.spec.mjs
+
+# Development files
+.git/
+.vscode/
+.idea/
+*.md
+*.log
+.env*
+
+# Source files not needed for standalone proxy
+server/src/
+
+# Build artifacts
+server/dist/
+server/build/
+
+# Package manager files
+.npmrc
+yarn.lock
+pnpm-lock.yaml
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test outputs
+*.mcpb
