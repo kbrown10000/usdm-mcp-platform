@@ -1,14 +1,16 @@
 {
   "name": "usdm-sales-mcp",
-  "version": "27.3.0",
-  "description": "USDM Sales Analytics MCP v27.3 - Production ready with full routing guards",
-  "main": "server/sales-proxy.mjs",
+  "version": "28.0.0",
+  "description": "USDM Sales Analytics MCP v28.0 - Complete with MSAL Authentication",
+  "main": "server/sales-proxy-v28-REAL-DATA.mjs",
   "type": "module",
   "scripts": {
-    "start": "node server/sales-proxy.mjs"
+    "start": "node server/sales-proxy-v28-REAL-DATA.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4"
+    "@azure/msal-node": "^2.16.2",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.9"
   },
   "engines": {
     "node": ">=18.0.0"

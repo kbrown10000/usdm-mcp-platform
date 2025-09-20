@@ -1,33 +1,27 @@
 {
   "dxt_version": "0.1",
   "name": "usdm-labor-mcp",
-  "display_name": "USDM Labor Analysis v27.0 Golden",
-  "version": "27.0.0",
-  "description": "V27.0 Golden - Complete v26.7 feature parity with 30 tools, local auth, and multi-tier caching",
+  "version": "28.0.0",
+  "description": "USDM Labor Analytics MCP v28.0 Golden - Three-token architecture with dataset isolation",
   "author": {
     "name": "USDM Platform Team"
   },
+  "license": "MIT",
   "server": {
     "type": "node",
-    "entry_point": "server/railway-proxy-v27-golden.mjs",
+    "entry_point": "server/labor-proxy-v28-golden.mjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/server/railway-proxy-v27-golden.mjs"],
+      "args": ["${__dirname}/server/labor-proxy-v28-golden.mjs"],
       "env": {
-        "NODE_ENV": "production",
-        "RAILWAY_BACKEND_URL": "https://usdm-mcp-platform-production.up.railway.app",
-        "AZURE_TENANT_ID": "18c250cf-2ef7-4eeb-b6fb-94660f7867e0",
-        "AZURE_CLIENT_ID": "8b84dc3b-a9ff-43ed-9d35-571f757e9c19",
-        "POWERBI_WORKSPACE_ID": "927b94af-e7ef-4b5a-8b8d-02b0c5450b75",
-        "POWERBI_DATASET_ID": "ea5298a1-13f0-4629-91ab-14f98163532e",
-        "API_AUDIENCE": "api://8b84dc3b-a9ff-43ed-9d35-571f757e9c19"
+        "NODE_ENV": "production"
       }
     }
   },
   "tools": [
     {
       "name": "start_login",
-      "description": "Start Microsoft authentication - shows device code"
+      "description": "Start Microsoft authentication using device code flow"
     },
     {
       "name": "check_login",
@@ -38,140 +32,90 @@
       "description": "Get authenticated user profile"
     },
     {
-      "name": "auth_status",
-      "description": "Check detailed authentication status with visual indicators"
-    },
-    {
-      "name": "validate_tokens",
-      "description": "Check token validity without making API calls"
-    },
-    {
-      "name": "refresh_tokens",
-      "description": "Force refresh of expired or near-expired tokens"
-    },
-    {
-      "name": "run_dax",
-      "description": "Run DAX query against PowerBI dataset (Tables: labor, DIM_Team_Member, DIM_Date)"
-    },
-    {
-      "name": "get_schema_info",
-      "description": "Get PowerBI dataset schema information and example DAX queries"
-    },
-    {
-      "name": "find_person",
-      "description": "Find team member by name in the dataset"
-    },
-    {
-      "name": "discover_tables",
-      "description": "Probe PowerBI dataset to discover actual table names and debug connection issues"
-    },
-    {
-      "name": "sample_rows",
-      "description": "Get sample rows from a PowerBI table"
-    },
-    {
-      "name": "search_people",
-      "description": "Search for team members in DIM_Team_Member"
-    },
-    {
-      "name": "get_person_monthly_summary",
-      "description": "Get monthly hours summary for a person from labor table"
-    },
-    {
-      "name": "debug_config",
-      "description": "Show current configuration for debugging"
-    },
-    {
-      "name": "list_tables",
-      "description": "List known tables in the PowerBI dataset"
-    },
-    {
       "name": "get_team_utilization",
-      "description": "Get team utilization rates with billable vs capacity analysis"
+      "description": "Get team utilization metrics and capacity analysis"
     },
     {
-      "name": "get_resource_allocation",
-      "description": "Show resource allocation across projects"
-    },
-    {
-      "name": "get_financial_performance",
-      "description": "Get financial performance metrics (revenue, cost, margin) by resource"
-    },
-    {
-      "name": "person_resolver",
-      "description": "v26.4: Find exact person name in dataset with 10-minute cache"
-    },
-    {
-      "name": "activity_for_person_month",
-      "description": "v26.4: Get monthly activity summary for a person (fast, optimized)"
-    },
-    {
-      "name": "person_revenue_analysis",
-      "description": "v26.4: Analyze person's estimated revenue contribution (NOTE: personal estimates, not project revenue)"
-    },
-    {
-      "name": "get_utilization_trends",
-      "description": "Get historical utilization trends with period comparisons"
-    },
-    {
-      "name": "get_manager_dashboard",
-      "description": "Get rollup metrics for a manager's team"
-    },
-    {
-      "name": "get_bench_report",
-      "description": "Find underutilized resources (bench report)"
-    },
-    {
-      "name": "get_project_staffing",
-      "description": "Get project team composition and resource allocation"
-    },
-    {
-      "name": "get_variance_analysis",
-      "description": "Compare metrics between periods or against targets"
-    },
-    {
-      "name": "get_cache_stats",
-      "description": "V26.6: View cache statistics and performance metrics"
-    },
-    {
-      "name": "clear_cache",
-      "description": "V26.6: Clear cache for specific type or all caches"
+      "name": "get_project_performance",
+      "description": "Get project performance metrics including budget vs actual"
     },
     {
       "name": "get_timecard_details",
-      "description": "V26.7: Get detailed timecard entries with work descriptions, notes, and activity categorization"
+      "description": "Get detailed timecard entries for a specific person and time period"
     },
     {
-      "name": "get_auth_status",
-      "description": "Get detailed authentication status and token validity (alias for auth_status)"
+      "name": "get_team_member_performance",
+      "description": "Get individual team member performance metrics"
+    },
+    {
+      "name": "get_billable_analysis",
+      "description": "Analyze billable vs non-billable hours breakdown"
+    },
+    {
+      "name": "get_margin_analysis",
+      "description": "Calculate project margins and profitability"
+    },
+    {
+      "name": "get_resource_allocation",
+      "description": "Get resource allocation and capacity planning data"
+    },
+    {
+      "name": "get_executive_dashboard",
+      "description": "Get high-level executive summary of labor metrics"
+    },
+    {
+      "name": "test_dax",
+      "description": "Test a custom DAX query against Labor dataset"
+    },
+    {
+      "name": "ping_dataset",
+      "description": "Test PowerBI connection and authentication"
+    },
+    {
+      "name": "get_cache_stats",
+      "description": "View cache statistics and performance metrics"
+    },
+    {
+      "name": "clear_cache",
+      "description": "Clear cache for specific type or all cached data"
+    },
+    {
+      "name": "get_labor_summary",
+      "description": "Get comprehensive labor analytics summary"
+    },
+    {
+      "name": "get_team_capacity",
+      "description": "Get team capacity planning and forecasting data"
+    },
+    {
+      "name": "get_project_budget",
+      "description": "Get detailed project budget analysis"
+    },
+    {
+      "name": "get_timecard_analysis",
+      "description": "Analyze timecard patterns and anomalies"
     }
   ],
   "prompts": [
     {
-      "name": "person_analysis",
-      "text": "Analyze the work patterns and productivity for {person_name} during {time_period}"
+      "name": "timecard_analysis",
+      "text": "Analyze timecard entries for a specific person and month. Use get_timecard_details tool."
     },
     {
-      "name": "timecard_review",
-      "text": "Review timecard entries with notes for {person_name} in {month} {year}"
+      "name": "team_utilization",
+      "text": "Show team utilization and capacity metrics. Use get_team_utilization tool."
     },
     {
-      "name": "utilization_report",
-      "text": "Generate a utilization report showing billable vs non-billable hours for {person_name}"
+      "name": "project_health",
+      "text": "Analyze project health and resource allocation. Use get_project_performance and get_resource_allocation tools."
     },
     {
-      "name": "team_dashboard",
-      "text": "Create a manager dashboard for {manager_name} showing team metrics and utilization"
+      "name": "margin_analysis",
+      "text": "Calculate revenue and margin metrics. Use get_margin_analysis tool."
     },
     {
-      "name": "financial_analysis",
-      "text": "Analyze financial performance (revenue, cost, margin) for {resource_name} in {period}"
+      "name": "executive_summary",
+      "text": "Provide executive dashboard summary. Use get_executive_dashboard tool."
     }
-  ],
-  "compatibility": {
-    "platforms": ["darwin", "win32", "linux"],
-    "runtimes": {
-      "node": ">=18.0.0"
-    }
-  }
+  ]
 }

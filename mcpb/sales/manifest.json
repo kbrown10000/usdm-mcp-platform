@@ -9,10 +9,10 @@
   "license": "MIT",
   "server": {
     "type": "node",
-    "entry_point": "server/sales-proxy.mjs",
+    "entry_point": "server/sales-proxy-v28-REAL-DATA.mjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/server/sales-proxy.mjs"],
+      "args": ["${__dirname}/server/sales-proxy-v28-REAL-DATA.mjs"],
       "env": {
         "NODE_ENV": "production"
       }
